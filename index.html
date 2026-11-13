@@ -303,6 +303,43 @@ h1{
 .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);margin:16px 0}
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-thumb{background:rgba(232,195,122,0.3);border-radius:10px}
+
+/* ===== SNOW ===== */
+#snow{position:fixed;inset:0;z-index:1;pointer-events:none}
+
+/* ===== AD BANNER ===== */
+.ad-banner{
+  position:relative;z-index:5;
+  display:flex;align-items:center;gap:14px;
+  padding:14px 18px;margin:0 0 20px;
+  border-radius:20px;
+  background:linear-gradient(120deg,rgba(58,160,224,0.18),rgba(232,195,122,0.14));
+  border:1px solid rgba(232,195,122,0.35);
+  box-shadow:0 16px 44px rgba(58,160,224,0.18), inset 0 1px 0 rgba(255,255,255,0.08);
+  overflow:hidden;
+}
+.ad-banner::before{
+  content:'';position:absolute;top:0;left:-60%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.14),transparent);
+  animation:adSweep 4.5s ease-in-out infinite;
+}
+@keyframes adSweep{0%{left:-60%}60%,100%{left:130%}}
+.ad-ic{
+  width:46px;height:46px;flex-shrink:0;border-radius:14px;display:grid;place-items:center;
+  font-size:24px;background:linear-gradient(135deg,rgba(232,195,122,0.3),rgba(58,160,224,0.2));
+  border:1px solid rgba(232,195,122,0.4);
+}
+.ad-txt{flex:1;min-width:0}
+.ad-txt .ad-t{font-size:14px;font-weight:800;letter-spacing:.3px;
+  background:linear-gradient(120deg,#fff,var(--gold));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.ad-txt .ad-s{font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.ad-btn{
+  flex-shrink:0;padding:10px 16px;border-radius:100px;border:none;cursor:pointer;
+  font-family:inherit;font-size:12px;font-weight:700;white-space:nowrap;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));color:#0a0e1a;
+  box-shadow:0 8px 22px var(--gold-glow);transition:.3s;
+}
+.ad-btn:active{transform:scale(.94)}
 </style>
 </head>
 <body>
