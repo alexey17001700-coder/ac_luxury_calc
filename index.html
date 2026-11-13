@@ -705,7 +705,7 @@ function buildText(){
   lines.push('');
   lines.push('Клиент: '+name);
   if(document.getElementById('cAddr').value)lines.push('Адрес: '+document.getElementById('cAddr').value);
-  lines.push('Система: '+document.getElementById('sysType').value+' '+document.getElementById('btu').value+' BTU');
+  lines.push('Кондиционер: '+document.getElementById('brand').value+' · '+document.getElementById('sysType').value+' '+document.getElementById('btu').value+' BTU');
   lines.push('━━━━━━━━━━━━━━━━━━');
   r.brk.forEach(x=>lines.push('• '+x[0]+': '+Math.round(x[1]).toLocaleString('ru')+' ₽'));
   lines.push('━━━━━━━━━━━━━━━━━━');
