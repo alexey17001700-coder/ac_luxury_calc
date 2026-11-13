@@ -659,7 +659,7 @@ function renderHist(){
   if(!history.length){box.innerHTML='<div class="empty"><div class="big">📭</div><p>Пока нет сохранённых смет</p></div>';return;}
   box.innerHTML=history.map(h=>`<div class="hist-item">
     <div class="hist-top">
-      <div><div class="hist-name">${esc(h.name)}</div><div class="hist-date">${h.date} · ${esc(h.sys)} ${h.btu} BTU</div></div>
+      <div><div class="hist-name">${esc(h.name)}</div><div class="hist-date">${h.date} · ${esc(h.brand||'')} ${esc(h.sys)} ${h.btu} BTU</div></div>
       <div class="hist-sum">${h.total.toLocaleString('ru')} ₽</div>
     </div>
     <div class="hist-actions">
