@@ -662,6 +662,17 @@ h1{
   </div>
 </div>
 
+<!-- PICKER SHEET -->
+<div class="pick-bg" id="pickBg" onclick="if(event.target===this)closePick()">
+  <div class="pick">
+    <div class="pick-head">
+      <h3 id="pickTitle">Выбор</h3>
+      <button class="x" onclick="closePick()">✕</button>
+    </div>
+    <div class="pick-grid" id="pickGrid"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
