@@ -939,7 +939,7 @@ function resetAll(){
   document.getElementById('complex').value='1';svcState={};persist();renderSvc();calc();
   toast('Сброшено');
 }
-function esc(s){return String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+function esc(s){return String(s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));}
 let toastT;
 function toast(m){
   const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');
