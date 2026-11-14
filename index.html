@@ -468,26 +468,25 @@ h1{
           <option value="Другой">Другой / не указан</option>
         </select>
       </div>
-      <div class="row2">
-        <div class="field"><label>Тип системы</label>
-          <select id="sysType">
-            <option value="Сплит-система">Сплит-система</option>
-            <option value="Мульти-сплит">Мульти-сплит</option>
-            <option value="Канальный">Канальный</option>
-            <option value="Кассетный">Кассетный</option>
-            <option value="Мобильный">Мобильный</option>
-          </select>
-        </div>
-        <div class="field"><label>Мощность, BTU</label>
-          <select id="btu">
-            <option value="7000">7 000</option>
-            <option value="9000" selected>9 000</option>
-            <option value="12000">12 000</option>
-            <option value="18000">18 000</option>
-            <option value="24000">24 000</option>
-            <option value="36000">36 000</option>
-          </select>
-        </div>
+      <div class="field"><label>Тип системы</label>
+        <div class="syspick" id="sysPick"></div>
+        <select id="sysType" style="display:none">
+          <option value="Сплит-система">Сплит-система</option>
+          <option value="Мульти-сплит">Мульти-сплит</option>
+          <option value="Канальный">Канальный</option>
+          <option value="Кассетный">Кассетный</option>
+          <option value="Мобильный">Мобильный</option>
+        </select>
+      </div>
+      <div class="field"><label>Мощность, BTU</label>
+        <select id="btu">
+          <option value="7000">7 000</option>
+          <option value="9000" selected>9 000</option>
+          <option value="12000">12 000</option>
+          <option value="18000">18 000</option>
+          <option value="24000">24 000</option>
+          <option value="36000">36 000</option>
+        </select>
       </div>
       <div class="row2">
         <div class="field"><label>Кол-во блоков</label><input id="blocks" type="number" value="1" min="1"></div>
