@@ -1172,11 +1172,46 @@ if('serviceWorker' in navigator){
   addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
 }
 
+/* ===== INTRO TOUR (авто-показ функций) ===== */
+const TOUR=[
+  {ic:'❄️',t:'Добро пожаловать в Climat Pro',d:'Премиум-калькулятор монтажника. Считает смету за секунды, хранит историю и отправляет её клиенту.'},
+  {ic:'👤',t:'Данные клиента',d:'Введи имя, телефон и адрес — они автоматически попадут в смету и в сообщение клиенту.'},
+  {ic:'🏷️',t:'Бренд и тип системы',d:'Выбери бренд кондиционера (Daikin, LG, Samsung…) и тип системы карточками — сплит, мульти-сплит, канальный, кассетный.'},
+  {ic:'🛠️',t:'Дополнительные работы',d:'Отметь галочками нужные работы — насос, кронштейны, фреон, зимний комплект. Укажи количество, цена посчитается сама.'},
+  {ic:'💎',t:'Итог и скидка',d:'Смета пересчитывается на лету. Задай скидку и выезд — итоговая сумма и разбивка по позициям видны сразу.'},
+  {ic:'📤',t:'Отправка клиенту',d:'Одна кнопка — и смета уходит в WhatsApp, Telegram, E-mail или SMS. Текст можно отредактировать перед отправкой.'},
+  {ic:'📚',t:'История смет',d:'Каждая смета сохраняется в памяти телефона. Открой, отправь повторно или сделай бэкап — всё работает офлайн.'}
+];
+let tourIdx=0;
+function renderTour(){
+  const s=TOUR[tourIdx];
+  const ic=document.getElementById('tourIc');
+  ic.textContent=s.ic;
+  ic.style.animation='none';void ic.offsetWidth;ic.style.animation='';
+  document.getElementById('tourTitle').textContent=s.t;
+  document.getElementById('tourText').textContent=s.d;
+  document.getElementById('tourDots').innerHTML=TOUR.map((_,i)=>'<i class="'+(i===tourIdx?'on':'')+'" onclick="tourGo('+i+')"></i>').join('');
+  document.getElementById('tourPrev').style.visibility=tourIdx===0?'hidden':'visible';
+  document.getElementById('tourNext').textContent=tourIdx===TOUR.length-1?'Начать работу 🚀':'Далее';
+}
+function tourGo(i){tourIdx=i;renderTour();}
+function tourNext(){
+  if(tourIdx<TOUR.length-1){tourIdx++;renderTour();}
+  else closeTour();
+}
+function tourPrev(){if(tourIdx>0){tourIdx--;renderTour();}}
+function showTour(){tourIdx=0;renderTour();document.getElementById('tourBg').classList.add('show');}
+function closeTour(){
+  document.getElementById('tourBg').classList.remove('show');
+  try{localStorage.setItem('climatpro_tour','1');}catch(e){}
+}
+
 /* ===== BOOT ===== */
 enhanceSelect('brand','Бренд кондиционера',BRAND_META);
 enhanceSelect('btu','Мощность, BTU',BTU_META);
 enhanceSelect('complex','Коэффициент сложности',COMPLEX_META);
 load();renderSvc();renderSysPick();fillSettings();renderHist();calc();
+if(!localStorage.getItem('climatpro_tour')){setTimeout(showTour,800);}
 </script>
 </body>
 </html>
