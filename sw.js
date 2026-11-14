@@ -1,5 +1,5 @@
 /* CLIMAT PRO — офлайн-кэш (PWA) */
-const CACHE = 'climatpro-v4';
+const CACHE = 'climatpro-v5';
 const ASSETS = ['./', './index.html', './manifest.json', './icons/icon.svg'];
 
 self.addEventListener('install', e => {
