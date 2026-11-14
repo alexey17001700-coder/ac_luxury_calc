@@ -1091,6 +1091,11 @@ function closePick(){document.getElementById('pickBg').classList.remove('show');
   addEventListener('resize',()=>{size();make();});
 })();
 
+/* ===== SERVICE WORKER (офлайн + установка как приложение) ===== */
+if('serviceWorker' in navigator){
+  addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+}
+
 /* ===== BOOT ===== */
 enhanceSelect('brand','Бренд кондиционера',BRAND_META);
 enhanceSelect('btu','Мощность, BTU',BTU_META);
