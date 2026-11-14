@@ -1169,7 +1169,16 @@ function closePick(){document.getElementById('pickBg').classList.remove('show');
 
 /* ===== SERVICE WORKER (офлайн + установка как приложение) ===== */
 if('serviceWorker' in navigator){
-  addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});
+  addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(reg=>{
+      reg.update().catch(()=>{});
+      setInterval(()=>reg.update().catch(()=>{}),60000);
+    }).catch(()=>{});
+    let reloaded=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(reloaded)return;reloaded=true;location.reload();
+    });
+  });
 }
 
 /* ===== INTRO TOUR (авто-показ функций) ===== */
