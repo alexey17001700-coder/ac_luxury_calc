@@ -1,0 +1,17 @@
+{
+  "name": "CLIMAT PRO — Калькулятор монтажника",
+  "short_name": "Climat Pro",
+  "description": "Премиум калькулятор смет на монтаж кондиционеров",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070a12",
+  "theme_color": "#0a0e1a",
+  "lang": "ru",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
