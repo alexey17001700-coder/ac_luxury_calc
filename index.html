@@ -936,7 +936,7 @@ function resetAll(){
   ['cName','cPhone','cAddr','equip','visit'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('blocks').value=1;document.getElementById('route').value=3;
   document.getElementById('height').value=0;document.getElementById('disc').value=0;
-  document.getElementById('complex').value='1';svcState={};persist();renderSvc();calc();
+  document.getElementById('complex').value='1';svcState={};persist();renderSvc();refreshPickers();calc();
   toast('Сброшено');
 }
 function esc(s){return String(s).replace(/[<>&"']/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));}
