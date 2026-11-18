@@ -997,12 +997,13 @@ function calc(){
   const height=settings.pHeight*num('height');
   const equip=num('equip');
   const visit=num('visit');
+  const extra=num('extra');
   let svcSum=0,svcLines=[];
   SERVICES.forEach(s=>{
     const st=svcState[s.id];
-    if(st&&st.on){const v=s.p*st.qty;svcSum+=v;svcLines.push([s.n+' ×'+st.qty,v]);}
+    if(st&&st.on){const v=svcPrice(s)*st.qty;svcSum+=v;svcLines.push([s.n+' ×'+st.qty,v]);}
   });
-  const base=mount+route+height+equip+visit+svcSum;
+  const base=mount+route+height+equip+visit+extra+svcSum;
   const complex=parseFloat(document.getElementById('complex').value);
   const afterComplex=base*complex;
   const disc=num('disc');
