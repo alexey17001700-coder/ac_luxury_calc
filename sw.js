@@ -1,7 +1,7 @@
-/* CLIMAT PRO — офлайн-кэш (PWA) v6
+/* CLIMAT PRO — офлайн-кэш (PWA) v8
    HTML/навигация: network-first (всегда свежая версия)
    Остальное: cache-first (быстро + офлайн) */
-const CACHE = 'climatpro-v6';
+const CACHE = 'climatpro-v8';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', e => {
