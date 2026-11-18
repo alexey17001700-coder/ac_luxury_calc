@@ -1055,14 +1055,17 @@ function collectData(){
     brand:document.getElementById('brand').value,
     btu:document.getElementById('btu').value,
     blocks:num('blocks'),equip:num('equip'),route:num('route'),height:num('height'),
-    complex:document.getElementById('complex').value,disc:num('disc'),visit:num('visit'),
+    complex:document.getElementById('complex').value,disc:num('disc'),visit:num('visit'),extra:num('extra'),
     svc
   };
 }
 function renderHist(){
   const box=document.getElementById('histList');
-  if(!history.length){box.innerHTML='<div class="empty"><div class="big">📭</div><p>Пока нет сохранённых смет</p></div>';return;}
-  box.innerHTML=history.map(h=>`<div class="hist-item">
+  const q=(document.getElementById('histSearch')?document.getElementById('histSearch').value:'').trim().toLowerCase();
+  let list=history;
+  if(q)list=history.filter(h=>((h.name||'')+' '+(h.addr||'')+' '+(h.brand||'')+' '+(h.sys||'')+' '+h.total).toLowerCase().includes(q));
+  if(!list.length){box.innerHTML='<div class="empty"><div class="big">📭</div><p>'+(q?'Ничего не найдено':'Пока нет сохранённых смет')+'</p></div>';return;}
+  box.innerHTML=list.map(h=>`<div class="hist-item">
     <div class="hist-top">
       <div><div class="hist-name">${esc(h.name)}</div><div class="hist-date">${h.date} · ${esc(h.brand||'')} ${esc(h.sys)} ${h.btu} BTU</div></div>
       <div class="hist-sum">${h.total.toLocaleString('ru')} ₽</div>
