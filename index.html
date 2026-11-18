@@ -1016,6 +1016,7 @@ function calc(){
     ['Высота ('+num('height')+' м)',height],
     ['Оборудование',equip],
     ['Выезд',visit],
+    ['Доп. работы',extra],
     ...svcLines
   ].filter(x=>x[1]>0);
   let html=brk.map(x=>`<div><span>${x[0]}</span><b>${Math.round(x[1]).toLocaleString('ru')} ₽</b></div>`).join('');
