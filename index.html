@@ -530,7 +530,12 @@ h1{
 body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 .field input,.field select,.field textarea{font-size:16px}
 .svc,.hist-item,.pick-item,.dd-btn,.chip{will-change:transform}
+.card,.result,.tool-out,.drawer,.modal,.tool,.pick{transform:translateZ(0)}
+#snow{contain:strict}
+.btn,.tab,.dr-item,.svc,.chip,.pick-item{user-select:none;-webkit-user-select:none}
+.tool-out .to-sub div{font-size:12.5px}
 @media (max-width:360px){.row3{grid-template-columns:1fr 1fr}.pick-grid{grid-template-columns:1fr}}
+@media (max-width:390px){.seg{flex-wrap:wrap}.seg button{flex:1 1 44%}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 /* ===== MENU BUTTON ===== */
