@@ -957,12 +957,15 @@ function load(){
     if(h)history=JSON.parse(h);
     const sv=localStorage.getItem('climatpro_svc');
     if(sv)svcState=JSON.parse(sv);
+    const pr=localStorage.getItem('climatpro_prices');
+    if(pr)PRICES=JSON.parse(pr);
   }catch(e){}
 }
 function persist(){
   localStorage.setItem('climatpro_set',JSON.stringify(settings));
   localStorage.setItem('climatpro_hist',JSON.stringify(history));
   localStorage.setItem('climatpro_svc',JSON.stringify(svcState));
+  localStorage.setItem('climatpro_prices',JSON.stringify(PRICES));
 }
 
 function renderSvc(){
