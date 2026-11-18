@@ -976,7 +976,7 @@ function renderSvc(){
       <div class="chk">✓</div>
       <div class="nm">${s.n}</div>
       <input class="qty" type="number" min="1" value="${st.qty}" onclick="event.stopPropagation()" onchange="setQty('${s.id}',this.value)">
-      <div class="pr">${s.p.toLocaleString('ru')} ₽</div>
+      <div class="pr">${svcPrice(s).toLocaleString('ru')} ₽</div>
     </div>`;
   }).join('');
 }
