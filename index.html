@@ -943,8 +943,10 @@ function pickSys(v){
   renderSysPick();calc();
 }
 let svcState={};
+let PRICES={};
 let settings={mName:'',mPhone:'',mMail:'',pMount:8000,pRoute:1500,pHeight:800,pDemount:3000};
 let history=[];
+function svcPrice(s){return PRICES[s.id]!=null?PRICES[s.id]:s.p;}
 
 /* ===== INIT ===== */
 function load(){
