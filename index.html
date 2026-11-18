@@ -894,6 +894,20 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   </div>
 </div>
 
+<!-- TOOL SHEET -->
+<div class="tool-bg" id="toolBg" onclick="if(event.target===this)closeTool()">
+  <div class="tool">
+    <div class="tool-head">
+      <h3 id="toolTitle">Инструмент</h3>
+      <button class="x" onclick="closeTool()">✕</button>
+    </div>
+    <div class="tool-desc" id="toolDesc"></div>
+    <div id="toolBody"></div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
