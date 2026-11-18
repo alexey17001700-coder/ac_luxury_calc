@@ -1203,7 +1203,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
 });
 
 /* ===== BIND ===== */
-['blocks','equip','route','height','complex','disc','visit'].forEach(id=>{
+['blocks','equip','route','height','complex','disc','visit','extra'].forEach(id=>{
   document.getElementById(id).addEventListener('input',calc);
   document.getElementById(id).addEventListener('change',calc);
 });
