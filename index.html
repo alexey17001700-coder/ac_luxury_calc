@@ -1093,6 +1093,7 @@ function loadHist(id){
   document.getElementById('complex').value=d.complex||'1';
   document.getElementById('disc').value=d.disc||0;
   document.getElementById('visit').value=d.visit||0;
+  document.getElementById('extra').value=d.extra||0;
   svcState={};(d.svc||[]).forEach(s=>{const f=SERVICES.find(x=>x.n===s.n);if(f)svcState[f.id]={on:true,qty:s.q};});
   persist();renderSvc();renderSysPick();refreshPickers();calc();
   document.querySelector('[data-tab=calc]').click();window.scrollTo({top:0,behavior:'smooth'});
