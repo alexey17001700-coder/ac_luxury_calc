@@ -1046,7 +1046,7 @@ function saveEstimate(){
 }
 function collectData(){
   const svc=[];
-  SERVICES.forEach(s=>{const st=svcState[s.id];if(st&&st.on)svc.push({n:s.n,q:st.qty,p:s.p});});
+  SERVICES.forEach(s=>{const st=svcState[s.id];if(st&&st.on)svc.push({n:s.n,q:st.qty,p:svcPrice(s)});});
   return {
     cName:document.getElementById('cName').value,
     cPhone:document.getElementById('cPhone').value,
