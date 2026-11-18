@@ -630,6 +630,44 @@ body{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 </head>
 <body>
 <canvas id="snow"></canvas>
+
+<button class="menu-btn" id="menuBtn" onclick="toggleDrawer()" aria-label="Меню"><i></i><i></i><i></i></button>
+<div class="drawer-bg" id="drawerBg" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="dh-t">Climat Pro</div>
+    <div class="dh-s">Меню мастера</div>
+  </div>
+  <div class="drawer-body">
+    <div class="dr-group">Расчёт</div>
+    <div class="dr-item" onclick="drGo('new')"><div class="dr-ic">🧮</div><div class="dr-tx"><div class="dr-nm">Новый расчёт</div><div class="dr-sub">Очистить и начать заново</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('tpl')"><div class="dr-ic">📋</div><div class="dr-tx"><div class="dr-nm">Шаблоны смет</div><div class="dr-sub">Готовые наборы работ</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('price')"><div class="dr-ic">🏷️</div><div class="dr-tx"><div class="dr-nm">Прайс-лист</div><div class="dr-sub">Свои цены на работы</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('save')"><div class="dr-ic">💾</div><div class="dr-tx"><div class="dr-nm">Сохранить смету</div><div class="dr-sub">В память телефона</div></div><div class="dr-arrow">›</div></div>
+
+    <div class="dr-group">Инструменты</div>
+    <div class="dr-item" onclick="drGo('power')"><div class="dr-ic">📐</div><div class="dr-tx"><div class="dr-nm">Подбор мощности</div><div class="dr-sub">BTU по площади помещения</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('freon')"><div class="dr-ic">🧊</div><div class="dr-tx"><div class="dr-nm">Дозаправка фреоном</div><div class="dr-sub">Граммы по длине трассы</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('energy')"><div class="dr-ic">⚡</div><div class="dr-tx"><div class="dr-nm">Энергопотребление</div><div class="dr-sub">Расход и ₽ в месяц</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('route')"><div class="dr-ic">📏</div><div class="dr-tx"><div class="dr-nm">Трасса и материалы</div><div class="dr-sub">Метраж, кабель, дренаж</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('vat')"><div class="dr-ic">🧾</div><div class="dr-tx"><div class="dr-nm">НДС и налог</div><div class="dr-sub">Начислить или выделить</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('credit')"><div class="dr-ic">💳</div><div class="dr-tx"><div class="dr-nm">Рассрочка</div><div class="dr-sub">Платёж в месяц</div></div><div class="dr-arrow">›</div></div>
+
+    <div class="dr-group">Документы</div>
+    <div class="dr-item" onclick="drGo('print')"><div class="dr-ic">🖨️</div><div class="dr-tx"><div class="dr-nm">Печать / PDF</div><div class="dr-sub">Смета на бумаге</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('send')"><div class="dr-ic">📤</div><div class="dr-tx"><div class="dr-nm">Отправить клиенту</div><div class="dr-sub">WhatsApp · Telegram · SMS</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('hist')"><div class="dr-ic">📚</div><div class="dr-tx"><div class="dr-nm">История смет</div><div class="dr-sub">Все сохранённые расчёты</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('stats')"><div class="dr-ic">📊</div><div class="dr-tx"><div class="dr-nm">Статистика</div><div class="dr-sub">Суммы и количество смет</div></div><div class="dr-arrow">›</div></div>
+
+    <div class="dr-group">Сервис</div>
+    <div class="dr-item" onclick="drGo('backup')"><div class="dr-ic">⬇️</div><div class="dr-tx"><div class="dr-nm">Резервная копия</div><div class="dr-sub">Скачать все данные</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('restore')"><div class="dr-ic">⬆️</div><div class="dr-tx"><div class="dr-nm">Восстановить</div><div class="dr-sub">Загрузить из файла</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('tour')"><div class="dr-ic">❓</div><div class="dr-tx"><div class="dr-nm">Обучение</div><div class="dr-sub">Показать все функции</div></div><div class="dr-arrow">›</div></div>
+    <div class="dr-item" onclick="drGo('about')"><div class="dr-ic">ℹ️</div><div class="dr-tx"><div class="dr-nm">О приложении</div><div class="dr-sub">Версия и возможности</div></div><div class="dr-arrow">›</div></div>
+  </div>
+  <div class="drawer-foot">Climat Pro · Premium v7<br>Работает офлайн · данные в телефоне</div>
+</aside>
+
 <div class="wrap">
 
   <header>
