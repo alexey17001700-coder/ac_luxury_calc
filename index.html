@@ -1722,6 +1722,305 @@ function aboutHtml(){
   '<button class="btn btn-gold" style="margin-top:14px" onclick="closeTool();showTour()">❓ Показать обучение</button>';
 }
 
+/* ---- ДОКУМЕНТЫ: КП / ДОГОВОР / АКТ / ГАРАНТИЯ ---- */
+function docMeta(){
+  const r=calc();
+  return {r:r,
+    name:document.getElementById('cName').value||'—',
+    phone:document.getElementById('cPhone').value||'',
+    addr:document.getElementById('cAddr').value||'',
+    brand:document.getElementById('brand').value,
+    sys:document.getElementById('sysType').value,
+    btu:document.getElementById('btu').value,
+    date:new Date().toLocaleDateString('ru'),
+    no:'№'+String(Date.now()).slice(-6)
+  };
+}
+function printDoc(title,body){
+  document.getElementById('printArea').innerHTML='<h2>'+title+'</h2>'+body;
+  setTimeout(()=>window.print(),150);
+}
+function docRows(r){
+  return r.brk.map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+Math.round(x[1]).toLocaleString('ru')+' ₽</td></tr>').join('');
+}
+function kpHtml(){
+  const d=docMeta();
+  return '<div class="tool-out"><div class="to-lbl">Коммерческое предложение</div><div class="to-sub">'+
+    'Клиент: <b>'+esc(d.name)+'</b><br>Оборудование: <b>'+esc(d.brand)+' '+esc(d.sys)+' '+d.btu+' BTU</b><br>'+
+    'Сумма: <b>'+d.r.total.toLocaleString('ru')+' ₽</b></div></div>'+
+    '<div class="btn-row" style="margin-top:14px">'+
+    '<button class="btn btn-gold" onclick="printKp()">🖨️ Печать КП</button>'+
+    '<button class="btn btn-ghost" onclick="closeTool();openSend()">📤 Отправить</button></div>';
+}
+function printKp(){
+  const d=docMeta();
+  printDoc('Коммерческое предложение '+d.no,
+    '<div class="pr-sub">от '+d.date+(settings.mName?' · '+esc(settings.mName):'')+'</div>'+
+    '<table><tr><td>Заказчик</td><td>'+esc(d.name)+'</td></tr>'+
+    (d.phone?'<tr><td>Телефон</td><td>'+esc(d.phone)+'</td></tr>':'')+
+    (d.addr?'<tr><td>Адрес объекта</td><td>'+esc(d.addr)+'</td></tr>':'')+
+    '<tr><td>Оборудование</td><td>'+esc(d.brand)+' · '+esc(d.sys)+' '+d.btu+' BTU</td></tr></table>'+
+    '<table>'+docRows(d.r)+'</table>'+
+    '<div class="pr-total">ИТОГО: '+d.r.total.toLocaleString('ru')+' ₽</div>'+
+    '<div class="pr-foot">Предложение действительно 14 дней.<br>Срок выполнения работ: 1–2 рабочих дня.'+(settings.mPhone?'<br>Телефон: '+esc(settings.mPhone):'')+'</div>');
+}
+function contractText(){
+  const d=docMeta();
+  return 'ДОГОВОР ПОДРЯДА '+d.no+'\nДата: '+d.date+'\n\n'+
+  'Исполнитель: '+(settings.mName||'________________')+(settings.mPhone?', тел. '+settings.mPhone:'')+'\n'+
+  'Заказчик: '+d.name+(d.phone?', тел. '+d.phone:'')+(d.addr?', адрес: '+d.addr:'')+'\n\n'+
+  '1. Исполнитель выполняет монтаж кондиционера '+d.brand+' '+d.sys+' '+d.btu+' BTU.\n'+
+  '2. Общая стоимость работ: '+d.r.total.toLocaleString('ru')+' ₽.\n'+
+  '3. Оплата: 50% предоплата, 50% после сдачи работ.\n'+
+  '4. Срок выполнения: 1–2 рабочих дня с момента начала работ.\n'+
+  '5. Гарантия на монтаж: 12 месяцев.\n'+
+  '6. Заказчик обеспечивает доступ к месту работ и электропитание.\n\n'+
+  'Исполнитель ______________   Заказчик ______________';
+}
+function contractHtml(){
+  const d=docMeta();
+  return '<div class="tool-out"><div class="to-lbl">Договор подряда</div><div class="to-sub">'+
+    'Стороны: <b>'+esc(settings.mName||'Исполнитель')+'</b> и <b>'+esc(d.name)+'</b><br>'+
+    'Предмет: монтаж '+esc(d.brand)+' '+d.btu+' BTU<br>'+
+    'Сумма договора: <b>'+d.r.total.toLocaleString('ru')+' ₽</b></div></div>'+
+    '<div class="btn-row" style="margin-top:14px">'+
+    '<button class="btn btn-gold" onclick="printContract()">🖨️ Печать договора</button>'+
+    '<button class="btn btn-ghost" onclick="copyContract()">📋 Копировать</button></div>';
+}
+function printContract(){
+  const d=docMeta();
+  printDoc('Договор подряда '+d.no,
+    '<div class="pr-sub">'+d.date+'</div>'+
+    '<table><tr><td>Исполнитель</td><td>'+esc(settings.mName||'—')+'</td></tr>'+
+    '<tr><td>Заказчик</td><td>'+esc(d.name)+'</td></tr>'+
+    (d.addr?'<tr><td>Адрес объекта</td><td>'+esc(d.addr)+'</td></tr>':'')+
+    '<tr><td>Предмет договора</td><td>Монтаж '+esc(d.brand)+' '+esc(d.sys)+' '+d.btu+' BTU</td></tr></table>'+
+    '<table>'+docRows(d.r)+'</table>'+
+    '<div class="pr-total">СУММА ДОГОВОРА: '+d.r.total.toLocaleString('ru')+' ₽</div>'+
+    '<div class="pr-foot">Оплата: 50% предоплата, 50% по факту сдачи. Срок: 1–2 рабочих дня. Гарантия на монтаж: 12 месяцев.<br><br>'+
+    'Исполнитель ______________ &nbsp;&nbsp;&nbsp; Заказчик ______________</div>');
+}
+function copyContract(){
+  navigator.clipboard.writeText(contractText()).then(()=>toast('Текст договора скопирован ✓')).catch(()=>toast('Не удалось скопировать'));
+}
+function actHtml(){
+  const d=docMeta();
+  return '<div class="tool-out"><div class="to-lbl">Акт выполненных работ</div><div class="to-sub">'+
+    'Объект: <b>'+esc(d.addr||'—')+'</b><br>Заказчик: <b>'+esc(d.name)+'</b><br>'+
+    'Сумма к сдаче: <b>'+d.r.total.toLocaleString('ru')+' ₽</b></div></div>'+
+    '<div class="btn-row" style="margin-top:14px">'+
+    '<button class="btn btn-gold" onclick="printAct()">🖨️ Печать акта</button>'+
+    '<button class="btn btn-ghost" onclick="closeTool();openSend()">📤 Отправить</button></div>';
+}
+function printAct(){
+  const d=docMeta();
+  printDoc('Акт выполненных работ '+d.no,
+    '<div class="pr-sub">'+d.date+'</div>'+
+    '<table><tr><td>Исполнитель</td><td>'+esc(settings.mName||'—')+'</td></tr>'+
+    '<tr><td>Заказчик</td><td>'+esc(d.name)+'</td></tr>'+
+    (d.addr?'<tr><td>Адрес объекта</td><td>'+esc(d.addr)+'</td></tr>':'')+
+    '<tr><td>Оборудование</td><td>'+esc(d.brand)+' · '+esc(d.sys)+' '+d.btu+' BTU</td></tr></table>'+
+    '<table>'+docRows(d.r)+'</table>'+
+    '<div class="pr-total">ИТОГО: '+d.r.total.toLocaleString('ru')+' ₽</div>'+
+    '<div class="pr-foot">Работы выполнены в полном объёме и в срок. Претензий по качеству и объёму Заказчик не имеет.<br><br>'+
+    'Работы сдал ______________ &nbsp;&nbsp;&nbsp; Работы принял ______________</div>');
+}
+function warrantyHtml(){
+  const d=docMeta();
+  return '<div class="tool-out"><div class="to-lbl">Гарантийный талон</div><div class="to-sub">'+
+    'Клиент: <b>'+esc(d.name)+'</b><br>Оборудование: <b>'+esc(d.brand)+' '+d.btu+' BTU</b><br>'+
+    'Срок гарантии на монтаж: <b>12 месяцев</b> с '+d.date+'</div></div>'+
+    '<div class="btn-row" style="margin-top:14px">'+
+    '<button class="btn btn-gold" onclick="printWarranty()">🖨️ Печать талона</button>'+
+    '<button class="btn btn-ghost" onclick="closeTool();openTool(\'checklist\')">📝 Чек-лист</button></div>';
+}
+function printWarranty(){
+  const d=docMeta();
+  printDoc('Гарантийный талон '+d.no,
+    '<div class="pr-sub">Выдан '+d.date+'</div>'+
+    '<table><tr><td>Владелец</td><td>'+esc(d.name)+'</td></tr>'+
+    (d.phone?'<tr><td>Телефон</td><td>'+esc(d.phone)+'</td></tr>':'')+
+    (d.addr?'<tr><td>Адрес объекта</td><td>'+esc(d.addr)+'</td></tr>':'')+
+    '<tr><td>Оборудование</td><td>'+esc(d.brand)+' · '+esc(d.sys)+' '+d.btu+' BTU</td></tr>'+
+    '<tr><td>Гарантия на монтаж</td><td>12 месяцев</td></tr>'+
+    '<tr><td>Действует до</td><td>'+new Date(Date.now()+365*864e5).toLocaleDateString('ru')+'</td></tr></table>'+
+    '<div class="pr-foot">Условия гарантии:<br>• Обязательное техобслуживание 2 раза в год у авторизованного мастера.<br>'+
+    '• Гарантия не покрывает механические повреждения, скачки напряжения и самостоятельный ремонт.<br>'+
+    '• При обращении предъявить талон.'+(settings.mPhone?'<br><br>Сервис: '+esc(settings.mPhone):'')+'</div>');
+}
+
+/* ---- ЗАМЕР ПОМЕЩЕНИЯ ---- */
+function roomHtml(){
+  return '<div class="row2">'+
+  '<div class="field"><label>Площадь, м²</label><input id="rmS" type="number" value="20" oninput="calcRoom()"></div>'+
+  '<div class="field"><label>Высота потолка, м</label><input id="rmH" type="number" value="2.7" step="0.1" oninput="calcRoom()"></div>'+
+  '</div>'+
+  '<div class="field"><label>Окон в комнате</label><input id="rmW" type="number" value="1" oninput="calcRoom()"></div>'+
+  '<div class="field"><label>Сторона света</label><div class="seg" id="rmSide">'+
+    '<button class="on" data-v="1" onclick="segPick(\'rmSide\',this);calcRoom()">Юг</button>'+
+    '<button data-v="0.95" onclick="segPick(\'rmSide\',this);calcRoom()">Восток/Запад</button>'+
+    '<button data-v="0.85" onclick="segPick(\'rmSide\',this);calcRoom()">Север</button>'+
+  '</div></div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Людей</label><input id="rmP" type="number" value="2" oninput="calcRoom()"></div>'+
+  '<div class="field"><label>Техника, кВт</label><input id="rmT" type="number" value="0.4" step="0.1" oninput="calcRoom()"></div>'+
+  '</div>'+
+  '<div class="tool-out" id="rmOut"></div>';
+}
+function calcRoom(){
+  const out=document.getElementById('rmOut');if(!out)return;
+  const s=tNum('rmS'),h=tNum('rmH')||2.7,w=tNum('rmW'),p=tNum('rmP'),t=tNum('rmT');
+  const el=document.querySelector('#rmSide button.on');
+  const side=parseFloat(el?el.dataset.v:1);
+  const load=s*(h/2.7)*100*side + w*120 + p*130 + t*300;
+  const btu=load*3.412;
+  const STD=[7000,9000,12000,18000,24000,36000,48000];
+  const rec=STD.find(x=>x>=btu)||48000;
+  out.innerHTML='<div class="to-lbl">Нужная мощность</div>'+
+  '<div class="to-val">'+rec.toLocaleString('ru')+' BTU</div>'+
+  '<div class="to-sub">≈ <b>'+(load/1000).toFixed(2)+' кВт</b> холода · нагрузка <b>'+Math.round(load)+' Вт</b><br>'+
+  'Площадь '+s+' м² · окон '+w+' · людей '+p+' · техника '+t+' кВт<br>'+
+  'Варианты: '+STD.filter(x=>x>=rec).slice(0,3).map(x=>x.toLocaleString('ru')).join(' / ')+' BTU</div>'+
+  '<button class="btn btn-gold" style="margin-top:14px" onclick="applyBtu('+rec+')">➕ Подставить в смету</button>';
+}
+
+/* ---- ГРАФИК ВЫЕЗДОВ ---- */
+let sched=[];
+function loadSched(){try{const s=localStorage.getItem('climatpro_sched');if(s)sched=JSON.parse(s);}catch(e){}}
+function saveSched(){localStorage.setItem('climatpro_sched',JSON.stringify(sched));}
+function schedHtml(){
+  return '<div class="row2">'+
+  '<div class="field"><label>Дата</label><input id="scD" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div>'+
+  '<div class="field"><label>Время</label><input id="scT" type="time" value="10:00"></div>'+
+  '</div>'+
+  '<div class="field"><label>Клиент / адрес</label><input id="scN" placeholder="Иван · ул. Ленина 15"></div>'+
+  '<div class="field"><label>Работа</label><input id="scW" placeholder="Монтаж 9000 BTU"></div>'+
+  '<button class="btn btn-gold" onclick="addSched()">➕ Добавить выезд</button>'+
+  '<div class="divider"></div><div id="scList"></div>';
+}
+function addSched(){
+  const d=document.getElementById('scD').value,t=document.getElementById('scT').value;
+  const n=document.getElementById('scN').value.trim(),w=document.getElementById('scW').value.trim();
+  if(!n){toast('Укажи клиента');return;}
+  sched.push({id:Date.now(),d:d,t:t,n:n,w:w});
+  sched.sort((a,b)=>(a.d+a.t).localeCompare(b.d+b.t));
+  saveSched();renderSched();toast('Выезд добавлен ✓');
+}
+function renderSched(){
+  const box=document.getElementById('scList');if(!box)return;
+  if(!sched.length){box.innerHTML='<div class="empty"><div class="big">📅</div><p>Выездов пока нет</p></div>';return;}
+  box.innerHTML=sched.map(s=>'<div class="hist-item"><div class="hist-top"><div><div class="hist-name">'+esc(s.n)+'</div>'+
+    '<div class="hist-date">'+esc(s.d)+' · '+esc(s.t)+(s.w?' · '+esc(s.w):'')+'</div></div>'+
+    '<button class="del" style="background:transparent;border:none;color:var(--danger);font-size:17px;cursor:pointer;padding:4px 8px" onclick="delSched('+s.id+')">✕</button></div></div>').join('');
+}
+function delSched(id){sched=sched.filter(x=>x.id!==id);saveSched();renderSched();toast('Удалено');}
+
+/* ---- БАЗА КЛИЕНТОВ ---- */
+function clientsList(){
+  const map={};
+  history.forEach(h=>{
+    const k=h.name||'Без имени';
+    if(!map[k])map[k]={n:k,phone:h.phone||'',addr:h.addr||'',c:0,sum:0,last:h.date};
+    map[k].c++;map[k].sum+=h.total;map[k].last=h.date;
+    if(h.phone)map[k].phone=h.phone;
+    if(h.addr)map[k].addr=h.addr;
+  });
+  return Object.values(map).sort((a,b)=>b.sum-a.sum);
+}
+function clientsHtml(){
+  const list=clientsList();
+  if(!list.length)return '<div class="empty"><div class="big">👥</div><p>Клиенты появятся после сохранения смет</p></div>';
+  return list.map((c,i)=>'<div class="hist-item"><div class="hist-top">'+
+    '<div><div class="hist-name">'+esc(c.n)+'</div><div class="hist-date">'+c.c+' смет · последняя '+esc(c.last)+
+    (c.phone?' · '+esc(c.phone):'')+(c.addr?' · '+esc(c.addr):'')+'</div></div>'+
+    '<div class="hist-sum">'+c.sum.toLocaleString('ru')+' ₽</div></div>'+
+    '<div class="hist-actions"><button onclick="findClient('+i+')">Сметы</button>'+
+    (c.phone?'<button onclick="open(\'tel:'+esc(c.phone)+'\')">Позвонить</button>':'')+'</div></div>').join('');
+}
+function findClient(i){
+  const c=clientsList()[i];if(!c)return;
+  closeTool();
+  document.querySelector('[data-tab=hist]').click();
+  const inp=document.getElementById('histSearch');
+  if(inp){inp.value=c.n;renderHist();}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---- ЗАРПЛАТА БРИГАДЫ ---- */
+function crewHtml(){
+  return '<div class="field"><label>Сумма сметы, ₽</label><input id="cwS" type="number" value="'+calc().total+'" oninput="calcCrew()"></div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Монтажников</label><input id="cwN" type="number" value="2" oninput="calcCrew()"></div>'+
+  '<div class="field"><label>Доля бригаде, %</label><input id="cwP" type="number" value="30" oninput="calcCrew()"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Материалы, ₽</label><input id="cwM" type="number" value="0" oninput="calcCrew()"></div>'+
+  '<div class="field"><label>Старшему, %</label><input id="cwX" type="number" value="60" oninput="calcCrew()"></div>'+
+  '</div>'+
+  '<div class="tool-out" id="cwOut"></div>';
+}
+function calcCrew(){
+  const out=document.getElementById('cwOut');if(!out)return;
+  const s=tNum('cwS'),n=Math.max(1,tNum('cwN')),p=tNum('cwP'),m=tNum('cwM'),x=tNum('cwX');
+  const fund=Math.max(0,(s-m)*p/100);
+  const senior=fund*x/100, rest=fund-senior;
+  const per=rest/Math.max(1,n-1);
+  out.innerHTML='<div class="to-lbl">Фонд бригады</div>'+
+  '<div class="to-val">'+Math.round(fund).toLocaleString('ru')+' ₽</div>'+
+  '<div class="to-sub">'+
+  (n>1?'Старший: <b>'+Math.round(senior).toLocaleString('ru')+' ₽</b><br>Каждому из '+(n-1)+': <b>'+Math.round(per).toLocaleString('ru')+' ₽</b><br>':'Каждому: <b>'+Math.round(fund/n).toLocaleString('ru')+' ₽</b><br>')+
+  'Остаётся мастеру: <b>'+Math.round(s-fund).toLocaleString('ru')+' ₽</b></div>';
+}
+
+/* ---- КОНВЕРТЕР ---- */
+function convertHtml(){
+  return '<div class="field"><label>Значение</label><input id="cvV" type="number" value="9000" oninput="calcConvert()"></div>'+
+  '<div class="field"><label>Из чего перевести</label><div class="seg" id="cvF">'+
+    '<button class="on" data-v="btu" onclick="segPick(\'cvF\',this);calcConvert()">BTU</button>'+
+    '<button data-v="kw" onclick="segPick(\'cvF\',this);calcConvert()">кВт</button>'+
+    '<button data-v="kcal" onclick="segPick(\'cvF\',this);calcConvert()">ккал/ч</button>'+
+    '<button data-v="hp" onclick="segPick(\'cvF\',this);calcConvert()">л.с.</button>'+
+  '</div></div>'+
+  '<div class="tool-out" id="cvOut"></div>';
+}
+function calcConvert(){
+  const out=document.getElementById('cvOut');if(!out)return;
+  const v=tNum('cvV');
+  const el=document.querySelector('#cvF button.on');
+  const f=el?el.dataset.v:'btu';
+  const kw={btu:v/3412.14,kw:v,kcal:v/860,hp:v*0.7457}[f];
+  out.innerHTML='<div class="to-lbl">Результат</div>'+
+  '<div class="to-val">'+Math.round(kw*3412.14).toLocaleString('ru')+' BTU</div>'+
+  '<div class="to-sub">'+
+  'кВт: <b>'+kw.toFixed(2)+'</b><br>'+
+  'ккал/ч: <b>'+Math.round(kw*860).toLocaleString('ru')+'</b><br>'+
+  'л.с.: <b>'+(kw/0.7457).toFixed(2)+'</b><br>'+
+  'кВт·ч за 8 ч работы: <b>'+(kw*8).toFixed(1)+'</b></div>';
+}
+
+/* ---- ЧЕК-ЛИСТ МОНТАЖА ---- */
+const CHECKS=[
+  'Осмотр места монтажа и согласование с клиентом',
+  'Проверка комплектации и внешнего вида блока',
+  'Разметка и сверление отверстия под трассу',
+  'Установка кронштейнов и наружного блока',
+  'Прокладка трассы, дренажа и кабеля',
+  'Вакуумирование системы',
+  'Пусконаладка и проверка режимов',
+  'Инструктаж клиента и уборка мусора'
+];
+let chkState={};
+function loadChk(){try{const s=localStorage.getItem('climatpro_chk');if(s)chkState=JSON.parse(s);}catch(e){}}
+function saveChk(){localStorage.setItem('climatpro_chk',JSON.stringify(chkState));}
+function checklistHtml(){
+  const done=CHECKS.filter((_,i)=>chkState[i]).length;
+  return '<div class="tool-desc" style="margin-bottom:10px">Выполнено: <b style="color:var(--gold)">'+done+' / '+CHECKS.length+'</b></div>'+
+  CHECKS.map((c,i)=>'<div class="svc '+(chkState[i]?'on':'')+'" onclick="toggleChk('+i+')"><div class="chk">✓</div><div class="nm">'+esc(c)+'</div></div>').join('')+
+  '<button class="btn btn-ghost" style="margin-top:12px" onclick="resetChk()">♻️ Сбросить чек-лист</button>';
+}
+function toggleChk(i){chkState[i]=!chkState[i];saveChk();openTool('checklist');vib();}
+function resetChk(){chkState={};saveChk();openTool('checklist');toast('Чек-лист сброшен');}
+
 const TOOLS={
   tpl:{t:'Шаблоны смет',d:'Готовые наборы работ — один тап и смета заполнена.',html:tplHtml},
   price:{t:'Прайс-лист',d:'Поставь свои цены. Они сохранятся и будут применяться во всех расчётах.',html:priceHtml},
@@ -1731,6 +2030,16 @@ const TOOLS={
   route:{t:'Трасса и материалы',d:'Список материалов на объект по метражу.',html:routeHtml,after:calcRoute},
   vat:{t:'НДС и налог',d:'Начислить НДС сверху или выделить из суммы.',html:vatHtml,after:calcVat},
   credit:{t:'Рассрочка',d:'Ежемесячный платёж и переплата по сумме сметы.',html:creditHtml,after:calcCredit},
+  kp:{t:'Коммерческое предложение',d:'Красивое КП для клиента — печать или отправка.',html:kpHtml},
+  contract:{t:'Договор подряда',d:'Готовый договор с суммой из сметы.',html:contractHtml},
+  act:{t:'Акт выполненных работ',d:'Бланк сдачи объекта под подпись заказчика.',html:actHtml},
+  warranty:{t:'Гарантийный талон',d:'Талон на 12 месяцев с данными объекта.',html:warrantyHtml},
+  room:{t:'Замер помещения',d:'Площадь, окна, сторона света → нужные BTU.',html:roomHtml,after:calcRoom},
+  schedule:{t:'График выездов',d:'Календарь замеров и монтажей.',html:schedHtml,after:renderSched},
+  clients:{t:'База клиентов',d:'Клиенты из истории смет с суммами.',html:clientsHtml},
+  crew:{t:'Зарплата бригады',d:'Делёж суммы между монтажниками.',html:crewHtml,after:calcCrew},
+  convert:{t:'Конвертер единиц',d:'BTU ↔ кВт ↔ ккал ↔ л.с.',html:convertHtml,after:calcConvert},
+  checklist:{t:'Чек-лист монтажа',d:'Порядок работ — ничего не забыть.',html:checklistHtml},
   stats:{t:'Статистика',d:'Сводка по всем сохранённым сметам.',html:statsHtml},
   about:{t:'О приложении',d:'Версия и возможности.',html:aboutHtml}
 };
