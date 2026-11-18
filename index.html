@@ -1382,6 +1382,371 @@ function closeTour(){
   try{localStorage.setItem('climatpro_tour','1');}catch(e){}
 }
 
+/* ===== DRAWER / MENU ===== */
+function vib(ms){try{if(navigator.vibrate)navigator.vibrate(ms||12);}catch(e){}}
+function toggleDrawer(){document.getElementById('drawer').classList.contains('show')?closeDrawer():openDrawer();}
+function openDrawer(){
+  document.getElementById('drawer').classList.add('show');
+  document.getElementById('drawerBg').classList.add('show');
+  document.getElementById('menuBtn').classList.add('open');
+  vib();
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('show');
+  document.getElementById('drawerBg').classList.remove('show');
+  document.getElementById('menuBtn').classList.remove('open');
+}
+function drGo(a){
+  closeDrawer();vib();
+  setTimeout(()=>{
+    switch(a){
+      case 'new':resetAll();break;
+      case 'save':saveEstimate();break;
+      case 'send':openSend();break;
+      case 'hist':document.querySelector('[data-tab=hist]').click();window.scrollTo({top:0,behavior:'smooth'});break;
+      case 'print':printEstimate();break;
+      case 'backup':exportHist();break;
+      case 'restore':document.getElementById('impFile').click();break;
+      case 'tour':showTour();break;
+      default:openTool(a);
+    }
+  },240);
+}
+
+/* ===== TOOL SHEET ===== */
+function openTool(id){
+  const T=TOOLS[id];if(!T)return;
+  document.getElementById('toolTitle').textContent=T.t;
+  document.getElementById('toolDesc').textContent=T.d;
+  document.getElementById('toolBody').innerHTML=T.html();
+  document.getElementById('toolBg').classList.add('show');
+  if(T.after)T.after();
+}
+function closeTool(){document.getElementById('toolBg').classList.remove('show');}
+function tNum(id){const e=document.getElementById(id);return e?(parseFloat(e.value)||0):0;}
+function segPick(g,el){
+  document.querySelectorAll('#'+g+' button').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');vib();
+}
+
+/* ---- Шаблоны смет ---- */
+const TEMPLATES=[
+  {id:'std',n:'Стандартный монтаж',svc:['brk','drain'],route:3,height:0,complex:'1'},
+  {id:'winter',n:'Зимний комплект',svc:['winter','brk','drain','vibro'],route:3,height:0,complex:'1'},
+  {id:'high',n:'Высокий этаж',svc:['brk','cable','drain'],route:4,height:6,complex:'1.3'},
+  {id:'full',n:'Полный комплекс',svc:['pump','brk','freon','winter','hole','cable','drain','vibro','clean','antiv'],route:5,height:3,complex:'1.15'},
+  {id:'service',n:'Сервис и чистка',svc:['clean','freon'],route:0,height:0,complex:'1'},
+  {id:'dismount',n:'Демонтаж',svc:['cable'],route:0,height:0,complex:'1'}
+];
+function tplHtml(){
+  return '<div class="chips">'+TEMPLATES.map(t=>'<div class="chip" onclick="applyTpl(\''+t.id+'\')">'+t.n+'</div>').join('')+'</div>'+
+  '<div class="tool-out"><div class="to-lbl">Как это работает</div><div class="to-sub">Тапни шаблон — работы, метраж трассы, высота и коэффициент сложности подставятся в смету автоматически. Дальше правь под объект.</div></div>';
+}
+function applyTpl(id){
+  const t=TEMPLATES.find(x=>x.id===id);if(!t)return;
+  svcState={};
+  t.svc.forEach(s=>{svcState[s]={on:true,qty:1};});
+  document.getElementById('route').value=t.route;
+  document.getElementById('height').value=t.height;
+  document.getElementById('complex').value=t.complex;
+  persist();renderSvc();refreshPickers();calc();
+  closeTool();vib(20);
+  toast('Шаблон «'+t.n+'» применён ✓');
+}
+
+/* ---- Прайс-лист ---- */
+function priceHtml(){
+  return SERVICES.map(s=>'<div class="price-row"><div class="pn">'+s.n+'</div><input type="number" min="0" value="'+svcPrice(s)+'" onchange="setPrice(\''+s.id+'\',this.value)"></div>').join('')+
+  '<div class="dr-group">Базовые работы</div>'+
+  '<div class="price-row"><div class="pn">Монтаж (за блок)</div><input type="number" min="0" value="'+settings.pMount+'" onchange="setBasePrice(\'pMount\',this.value)"></div>'+
+  '<div class="price-row"><div class="pn">Трасса, ₽/м</div><input type="number" min="0" value="'+settings.pRoute+'" onchange="setBasePrice(\'pRoute\',this.value)"></div>'+
+  '<div class="price-row"><div class="pn">Высота, ₽/м</div><input type="number" min="0" value="'+settings.pHeight+'" onchange="setBasePrice(\'pHeight\',this.value)"></div>'+
+  '<div class="price-row"><div class="pn">Демонтаж</div><input type="number" min="0" value="'+settings.pDemount+'" onchange="setBasePrice(\'pDemount\',this.value)"></div>'+
+  '<button class="btn btn-ghost" style="margin-top:12px" onclick="resetPrices()">♻️ Вернуть стандартные цены</button>';
+}
+function setPrice(id,v){PRICES[id]=Math.max(0,parseFloat(v)||0);persist();renderSvc();calc();}
+function setBasePrice(k,v){settings[k]=Math.max(0,parseFloat(v)||0);persist();fillSettings();calc();}
+function resetPrices(){PRICES={};persist();renderSvc();calc();openTool('price');toast('Цены сброшены');}
+
+/* ---- Подбор мощности ---- */
+function powerHtml(){
+  return '<div class="row2">'+
+    '<div class="field"><label>Площадь, м²</label><input id="pwS" type="number" value="25" oninput="calcPower()"></div>'+
+    '<div class="field"><label>Высота потолка, м</label><input id="pwH" type="number" value="2.7" step="0.1" oninput="calcPower()"></div>'+
+    '</div>'+
+    '<div class="field"><label>Инсоляция</label><div class="seg" id="pwSun">'+
+      '<button class="on" data-v="1" onclick="segPick(\'pwSun\',this);calcPower()">Обычная</button>'+
+      '<button data-v="1.15" onclick="segPick(\'pwSun\',this);calcPower()">Солнечная</button>'+
+      '<button data-v="0.9" onclick="segPick(\'pwSun\',this);calcPower()">Север</button>'+
+    '</div></div>'+
+    '<div class="row2">'+
+    '<div class="field"><label>Людей в комнате</label><input id="pwP" type="number" value="2" oninput="calcPower()"></div>'+
+    '<div class="field"><label>Техника, кВт</label><input id="pwT" type="number" value="0.5" step="0.1" oninput="calcPower()"></div>'+
+    '</div>'+
+    '<div class="tool-out" id="pwOut"></div>';
+}
+function calcPower(){
+  const out=document.getElementById('pwOut');if(!out)return;
+  const s=tNum('pwS'),h=tNum('pwH')||2.7;
+  const sunEl=document.querySelector('#pwSun button.on');
+  const sun=parseFloat(sunEl?sunEl.dataset.v:1);
+  const p=tNum('pwP'),t=tNum('pwT');
+  const w=s*(h/2.7)*100*sun + p*130 + t*300;
+  const btu=w*3.412;
+  const STD=[7000,9000,12000,18000,24000,36000,48000];
+  const rec=STD.find(x=>x>=btu)||48000;
+  out.innerHTML='<div class="to-lbl">Рекомендуемая мощность</div>'+
+    '<div class="to-val">'+rec.toLocaleString('ru')+' BTU</div>'+
+    '<div class="to-sub">≈ <b>'+(w/1000).toFixed(2)+' кВт</b> холода · нагрузка <b>'+Math.round(w)+' Вт</b><br>'+
+    'Площадь '+s+' м² · потолок '+h+' м · людей '+p+' · техника '+t+' кВт<br>'+
+    'Варианты: '+STD.filter(x=>x>=rec).slice(0,3).map(x=>x.toLocaleString('ru')).join(' / ')+' BTU</div>'+
+    '<button class="btn btn-gold" style="margin-top:14px" onclick="applyBtu('+rec+')">➕ Подставить в смету</button>';
+}
+function applyBtu(v){
+  const sel=document.getElementById('btu');
+  const has=[...sel.options].some(o=>o.value==String(v));
+  if(has){sel.value=String(v);refreshPickers();}
+  else{toast('В списке нет '+v+' BTU — выбери вручную');}
+  calc();closeTool();vib(20);
+}
+
+/* ---- Фреон ---- */
+const FREON={'R410A':{g:30,p:2600},'R32':{g:25,p:2400},'R22':{g:40,p:3200}};
+function freonHtml(){
+  return '<div class="field"><label>Тип фреона</label><div class="seg" id="frType">'+
+    Object.keys(FREON).map((k,i)=>'<button class="'+(i===0?'on':'')+'" data-v="'+k+'" onclick="segPick(\'frType\',this);frTypeSet()">'+k+'</button>').join('')+
+  '</div></div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Длина трассы, м</label><input id="frL" type="number" value="5" oninput="calcFreon()"></div>'+
+  '<div class="field"><label>Заводская заправка, г</label><input id="frF" type="number" value="900" oninput="calcFreon()"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Норма, г/м</label><input id="frG" type="number" value="30" oninput="calcFreon()"></div>'+
+  '<div class="field"><label>Цена фреона, ₽/кг</label><input id="frP" type="number" value="2600" oninput="calcFreon()"></div>'+
+  '</div>'+
+  '<div class="tool-out" id="frOut"></div>';
+}
+function frTypeSet(){
+  const el=document.querySelector('#frType button.on');if(!el)return;
+  const m=FREON[el.dataset.v];
+  if(m){document.getElementById('frG').value=m.g;document.getElementById('frP').value=m.p;}
+  calcFreon();
+}
+function calcFreon(){
+  const out=document.getElementById('frOut');if(!out)return;
+  const el=document.querySelector('#frType button.on');
+  const type=el?el.dataset.v:'R410A';
+  const L=tNum('frL'),F=tNum('frF'),G=tNum('frG'),P=tNum('frP');
+  const free=5;
+  const extra=Math.max(0,L-free)*G;
+  const total=F+extra;
+  const cost=Math.round(extra/1000*P);
+  out.innerHTML='<div class="to-lbl">Дозаправка · '+type+'</div>'+
+    '<div class="to-val">'+Math.round(extra)+' г</div>'+
+    '<div class="to-sub">Сверх нормы (первые '+free+' м бесплатно)<br>'+
+    'Всего в системе: <b>'+Math.round(total)+' г</b><br>'+
+    'Стоимость дозаправки: <b>'+cost.toLocaleString('ru')+' ₽</b></div>'+
+    '<button class="btn btn-gold" style="margin-top:14px" onclick="addExtra('+cost+',\'Дозаправка фреоном '+type+'\')">➕ Добавить в смету</button>';
+}
+function addExtra(sum,label){
+  document.getElementById('extra').value=(num('extra')+sum);
+  calc();closeTool();vib(20);
+  toast((label||'Добавлено')+' · '+sum.toLocaleString('ru')+' ₽ ✓');
+}
+
+/* ---- Энергопотребление ---- */
+function energyHtml(){
+  return '<div class="row2">'+
+  '<div class="field"><label>Мощность, BTU</label><input id="enB" type="number" value="9000" oninput="calcEnergy()"></div>'+
+  '<div class="field"><label>Часов в день</label><input id="enH" type="number" value="8" oninput="calcEnergy()"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Дней в месяц</label><input id="enD" type="number" value="30" oninput="calcEnergy()"></div>'+
+  '<div class="field"><label>Тариф, ₽/кВт·ч</label><input id="enT" type="number" value="6" step="0.1" oninput="calcEnergy()"></div>'+
+  '</div>'+
+  '<div class="field"><label>Тип компрессора</label><div class="seg" id="enM">'+
+    '<button class="on" data-v="0.6" onclick="segPick(\'enM\',this);calcEnergy()">Инвертор</button>'+
+    '<button data-v="1" onclick="segPick(\'enM\',this);calcEnergy()">Обычный</button>'+
+  '</div></div>'+
+  '<div class="tool-out" id="enOut"></div>';
+}
+function calcEnergy(){
+  const out=document.getElementById('enOut');if(!out)return;
+  const btu=tNum('enB'),h=tNum('enH'),d=tNum('enD'),t=tNum('enT');
+  const el=document.querySelector('#enM button.on');
+  const mode=parseFloat(el?el.dataset.v:0.6);
+  const kw=btu/3412;
+  const kwh=kw*h*d*mode;
+  const cost=kwh*t;
+  out.innerHTML='<div class="to-lbl">Расход в месяц</div>'+
+    '<div class="to-val">'+Math.round(cost).toLocaleString('ru')+' ₽</div>'+
+    '<div class="to-sub">Потребление: <b>'+kwh.toFixed(1)+' кВт·ч</b><br>'+
+    'Мощность: <b>'+kw.toFixed(2)+' кВт</b> · режим ×'+mode+'<br>'+
+    'В год: <b>'+Math.round(cost*12).toLocaleString('ru')+' ₽</b></div>';
+}
+
+/* ---- Трасса и материалы ---- */
+function routeHtml(){
+  return '<div class="row2">'+
+  '<div class="field"><label>Длина трассы, м</label><input id="rtL" type="number" value="4" oninput="calcRoute()"></div>'+
+  '<div class="field"><label>Отверстий в стене</label><input id="rtH" type="number" value="1" oninput="calcRoute()"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Кабель-канал, м</label><input id="rtC" type="number" value="4" oninput="calcRoute()"></div>'+
+  '<div class="field"><label>Дренаж, м</label><input id="rtD" type="number" value="4" oninput="calcRoute()"></div>'+
+  '</div>'+
+  '<div class="field"><label>Кронштейнов (пар)</label><input id="rtB" type="number" value="1" oninput="calcRoute()"></div>'+
+  '<div class="tool-out" id="rtOut"></div>';
+}
+function routeRows(){
+  const L=tNum('rtL'),H=tNum('rtH'),C=tNum('rtC'),D=tNum('rtD'),B=tNum('rtB');
+  return [
+    ['Медная трасса (жидкость+газ)',L+' м'],
+    ['Теплоизоляция',L+' м'],
+    ['Кабель-канал',C+' м'],
+    ['Дренажный шланг',D+' м'],
+    ['Отверстий в стене',H+' шт'],
+    ['Кронштейны',B+' пар']
+  ];
+}
+function calcRoute(){
+  const out=document.getElementById('rtOut');if(!out)return;
+  out.innerHTML='<div class="to-lbl">Материалы на объект</div>'+
+    '<div class="to-sub" style="margin-top:12px">'+routeRows().map(r=>'<div style="display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:5px 0"><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('')+'</div>'+
+    '<button class="btn btn-ghost" style="margin-top:14px" onclick="copyRoute()">📋 Скопировать список</button>';
+}
+function copyRoute(){
+  const t='МАТЕРИАЛЫ НА ОБЪЕКТ\n'+routeRows().map(r=>'• '+r[0]+': '+r[1]).join('\n');
+  navigator.clipboard.writeText(t).then(()=>toast('Список скопирован ✓')).catch(()=>toast('Не удалось скопировать'));
+}
+
+/* ---- НДС ---- */
+function vatHtml(){
+  return '<div class="field"><label>Сумма, ₽</label><input id="vtS" type="number" value="'+calc().total+'" oninput="calcVat()"></div>'+
+  '<div class="field"><label>Ставка</label><div class="seg" id="vtR">'+
+    '<button class="on" data-v="20" onclick="segPick(\'vtR\',this);calcVat()">20%</button>'+
+    '<button data-v="10" onclick="segPick(\'vtR\',this);calcVat()">10%</button>'+
+    '<button data-v="5" onclick="segPick(\'vtR\',this);calcVat()">5%</button>'+
+    '<button data-v="0" onclick="segPick(\'vtR\',this);calcVat()">Без НДС</button>'+
+  '</div></div>'+
+  '<div class="field"><label>Режим</label><div class="seg" id="vtM">'+
+    '<button class="on" data-v="add" onclick="segPick(\'vtM\',this);calcVat()">Начислить сверху</button>'+
+    '<button data-v="inc" onclick="segPick(\'vtM\',this);calcVat()">Выделить из суммы</button>'+
+  '</div></div>'+
+  '<div class="tool-out" id="vtOut"></div>';
+}
+function calcVat(){
+  const out=document.getElementById('vtOut');if(!out)return;
+  const s=tNum('vtS');
+  const rEl=document.querySelector('#vtR button.on');
+  const mEl=document.querySelector('#vtM button.on');
+  const r=parseFloat(rEl?rEl.dataset.v:20);
+  const m=mEl?mEl.dataset.v:'add';
+  let net,gross,vat;
+  if(m==='add'){net=s;vat=s*r/100;gross=s+vat;}
+  else{net=s/(1+r/100);vat=s-net;gross=s;}
+  out.innerHTML='<div class="to-lbl">'+(m==='add'?'Сумма с НДС':'НДС выделен')+'</div>'+
+    '<div class="to-val">'+Math.round(gross).toLocaleString('ru')+' ₽</div>'+
+    '<div class="to-sub">Без НДС: <b>'+Math.round(net).toLocaleString('ru')+' ₽</b><br>'+
+    'НДС '+r+'%: <b>'+Math.round(vat).toLocaleString('ru')+' ₽</b></div>';
+}
+
+/* ---- Рассрочка ---- */
+function creditHtml(){
+  return '<div class="field"><label>Сумма, ₽</label><input id="crS" type="number" value="'+calc().total+'" oninput="calcCredit()"></div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Срок, месяцев</label><input id="crM" type="number" value="12" oninput="calcCredit()"></div>'+
+  '<div class="field"><label>Ставка, % годовых</label><input id="crR" type="number" value="0" step="0.1" oninput="calcCredit()"></div>'+
+  '</div>'+
+  '<div class="tool-out" id="crOut"></div>';
+}
+function calcCredit(){
+  const out=document.getElementById('crOut');if(!out)return;
+  const s=tNum('crS'),m=Math.max(1,tNum('crM')),r=tNum('crR');
+  let pay;
+  if(r<=0){pay=s/m;}
+  else{const i=r/100/12;pay=s*i/(1-Math.pow(1+i,-m));}
+  const total=pay*m;
+  out.innerHTML='<div class="to-lbl">Платёж в месяц</div>'+
+    '<div class="to-val">'+Math.round(pay).toLocaleString('ru')+' ₽</div>'+
+    '<div class="to-sub">Всего выплат: <b>'+Math.round(total).toLocaleString('ru')+' ₽</b><br>'+
+    'Переплата: <b>'+Math.round(total-s).toLocaleString('ru')+' ₽</b> · срок '+m+' мес</div>';
+}
+
+/* ---- Статистика ---- */
+function statsHtml(){
+  const n=history.length;
+  const sum=history.reduce((a,h)=>a+h.total,0);
+  const avg=n?Math.round(sum/n):0;
+  const now=new Date();
+  const mon=history.filter(h=>{const d=new Date(h.id);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();});
+  const mSum=mon.reduce((a,h)=>a+h.total,0);
+  const brands={};
+  history.forEach(h=>{brands[h.brand]=(brands[h.brand]||0)+1;});
+  const top=Object.entries(brands).sort((a,b)=>b[1]-a[1])[0];
+  return '<div class="stat-grid">'+
+    '<div class="stat"><div class="sv">'+n+'</div><div class="sl">Смет всего</div></div>'+
+    '<div class="stat"><div class="sv">'+sum.toLocaleString('ru')+' ₽</div><div class="sl">Общая сумма</div></div>'+
+    '<div class="stat"><div class="sv">'+avg.toLocaleString('ru')+' ₽</div><div class="sl">Средний чек</div></div>'+
+    '<div class="stat"><div class="sv">'+mSum.toLocaleString('ru')+' ₽</div><div class="sl">За этот месяц</div></div>'+
+  '</div>'+
+  '<div class="tool-out" style="margin-top:14px"><div class="to-lbl">Итоги</div><div class="to-sub">'+
+    'Смет за месяц: <b>'+mon.length+'</b><br>'+
+    'Популярный бренд: <b>'+(top?top[0]+' ('+top[1]+')':'—')+'</b><br>'+
+    'Средний чек: <b>'+avg.toLocaleString('ru')+' ₽</b></div></div>';
+}
+
+/* ---- О приложении ---- */
+function aboutHtml(){
+  return '<div class="tool-out"><div class="to-lbl">Climat Pro · Premium v7</div>'+
+  '<div class="to-sub" style="margin-top:10px">'+
+  'Профессиональный калькулятор монтажника кондиционеров.<br><br>'+
+  '• Расчёт сметы с разбивкой по позициям<br>'+
+  '• Свой прайс-лист и шаблоны работ<br>'+
+  '• Подбор мощности, фреон, энергопотребление<br>'+
+  '• НДС, рассрочка, материалы<br>'+
+  '• История, статистика, печать и отправка клиенту<br><br>'+
+  '<b>Работает полностью офлайн.</b> Данные хранятся только в памяти телефона.</div></div>'+
+  '<button class="btn btn-gold" style="margin-top:14px" onclick="closeTool();showTour()">❓ Показать обучение</button>';
+}
+
+const TOOLS={
+  tpl:{t:'Шаблоны смет',d:'Готовые наборы работ — один тап и смета заполнена.',html:tplHtml},
+  price:{t:'Прайс-лист',d:'Поставь свои цены. Они сохранятся и будут применяться во всех расчётах.',html:priceHtml},
+  power:{t:'Подбор мощности',d:'Считает нужные BTU по площади, потолкам, солнцу, людям и технике.',html:powerHtml,after:calcPower},
+  freon:{t:'Дозаправка фреоном',d:'Сколько грамм нужно долить и сколько это стоит.',html:freonHtml,after:calcFreon},
+  energy:{t:'Энергопотребление',d:'Расход электричества и стоимость в месяц и в год.',html:energyHtml,after:calcEnergy},
+  route:{t:'Трасса и материалы',d:'Список материалов на объект по метражу.',html:routeHtml,after:calcRoute},
+  vat:{t:'НДС и налог',d:'Начислить НДС сверху или выделить из суммы.',html:vatHtml,after:calcVat},
+  credit:{t:'Рассрочка',d:'Ежемесячный платёж и переплата по сумме сметы.',html:creditHtml,after:calcCredit},
+  stats:{t:'Статистика',d:'Сводка по всем сохранённым сметам.',html:statsHtml},
+  about:{t:'О приложении',d:'Версия и возможности.',html:aboutHtml}
+};
+
+/* ===== PRINT ===== */
+function printEstimate(){
+  const r=calc();
+  const name=document.getElementById('cName').value||'—';
+  const phone=document.getElementById('cPhone').value||'';
+  const addr=document.getElementById('cAddr').value||'';
+  const rows=r.brk.map(x=>'<tr><td>'+esc(x[0])+'</td><td>'+Math.round(x[1]).toLocaleString('ru')+' ₽</td></tr>').join('');
+  document.getElementById('printArea').innerHTML=
+    '<h2>Смета на монтаж кондиционера</h2>'+
+    '<div class="pr-sub">'+new Date().toLocaleString('ru')+(settings.mName?' · '+esc(settings.mName):'')+'</div>'+
+    '<table>'+
+      '<tr><td>Клиент</td><td>'+esc(name)+'</td></tr>'+
+      (phone?'<tr><td>Телефон</td><td>'+esc(phone)+'</td></tr>':'')+
+      (addr?'<tr><td>Адрес</td><td>'+esc(addr)+'</td></tr>':'')+
+      '<tr><td>Оборудование</td><td>'+esc(document.getElementById('brand').value)+' · '+esc(document.getElementById('sysType').value)+' '+document.getElementById('btu').value+' BTU</td></tr>'+
+    '</table>'+
+    '<table>'+rows+'</table>'+
+    '<div class="pr-total">ИТОГО: '+r.total.toLocaleString('ru')+' ₽</div>'+
+    '<div class="pr-foot">Смета действительна 14 дней.'+(settings.mPhone?'<br>Телефон мастера: '+esc(settings.mPhone):'')+(settings.mMail?'<br>E-mail: '+esc(settings.mMail):'')+'</div>';
+  setTimeout(()=>window.print(),150);
+}
+
+addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();closeTool();closeSend();closePick();}});
+
 /* ===== BOOT ===== */
 enhanceSelect('brand','Бренд кондиционера',BRAND_META);
 enhanceSelect('btu','Мощность, BTU',BTU_META);
