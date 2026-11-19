@@ -1477,7 +1477,7 @@ function openTool(id){
   document.getElementById('toolBg').classList.add('show');
   if(T.after)T.after();
 }
-function closeTool(){document.getElementById('toolBg').classList.remove('show');}
+function closeTool(){document.getElementById('toolBg').classList.remove('show');stopLevel();}
 function tNum(id){const e=document.getElementById(id);return e?(parseFloat(e.value)||0):0;}
 function segPick(g,el){
   document.querySelectorAll('#'+g+' button').forEach(b=>b.classList.remove('on'));
