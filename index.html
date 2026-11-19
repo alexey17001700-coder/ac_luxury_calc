@@ -2067,6 +2067,234 @@ function checklistHtml(){
 function toggleChk(i){chkState[i]=!chkState[i];saveChk();openTool('checklist');vib();}
 function resetChk(){chkState={};saveChk();openTool('checklist');toast('Чек-лист сброшен');}
 
+/* ---- УРОВЕНЬ (пузырьковый) ---- */
+let lvlOn=false,lvlHandler=null;
+function levelHtml(){
+  return '<div class="lvl-wrap">'+
+    '<div class="lvl-ring"><div class="lvl-cross"></div><div class="lvl-bubble" id="lvlBub"></div></div>'+
+    '<div class="lvl-val" id="lvlVal">—</div></div>'+
+    '<div class="tool-desc">Положи телефон на блок или на трассу. Держи ровно — пузырёк встанет в центр и позеленеет.</div>'+
+    '<button class="btn btn-gold" id="lvlBtn" onclick="toggleLevel()">▶ Включить уровень</button>'+
+    '<div class="tool-out"><div class="to-lbl">Наклон</div><div class="to-sub" id="lvlOut">Продольный: <b>—</b><br>Поперечный: <b>—</b></div></div>';
+}
+function toggleLevel(){
+  if(lvlOn){stopLevel();return;}
+  const start=()=>{
+    lvlOn=true;
+    const b=document.getElementById('lvlBtn');if(b)b.textContent='⏸ Выключить уровень';
+    lvlHandler=e=>{
+      const p=e.beta||0,r=e.gamma||0;
+      const bub=document.getElementById('lvlBub');
+      const ok=Math.abs(r)<2&&Math.abs(p)<2;
+      if(bub){
+        const x=Math.max(-1,Math.min(1,r/25)),y=Math.max(-1,Math.min(1,p/25));
+        bub.style.transform='translate('+(x*34)+'px,'+(y*34)+'px)';
+        bub.style.background=ok?'linear-gradient(135deg,#4ade80,#22c55e)':'linear-gradient(135deg,var(--gold),var(--gold2))';
+        bub.style.boxShadow=ok?'0 0 26px rgba(74,222,128,.6)':'0 0 22px var(--gold-glow)';
+      }
+      const o=document.getElementById('lvlOut');
+      if(o)o.innerHTML='Продольный: <b>'+p.toFixed(1)+'°</b><br>Поперечный: <b>'+r.toFixed(1)+'°</b>';
+      const v=document.getElementById('lvlVal');
+      if(v)v.textContent=ok?'РОВНО ✓':Math.max(Math.abs(r),Math.abs(p)).toFixed(1)+'°';
+    };
+    addEventListener('deviceorientation',lvlHandler);
+    vib();
+  };
+  if(typeof DeviceOrientationEvent!=='undefined'&&DeviceOrientationEvent.requestPermission){
+    DeviceOrientationEvent.requestPermission().then(s=>{s==='granted'?start():toast('Нет доступа к датчикам');}).catch(()=>toast('Нет доступа к датчикам'));
+  }else if(typeof DeviceOrientationEvent!=='undefined'){start();}
+  else{toast('Датчики недоступны');}
+}
+function stopLevel(){
+  lvlOn=false;
+  if(lvlHandler)removeEventListener('deviceorientation',lvlHandler);
+  lvlHandler=null;
+  const b=document.getElementById('lvlBtn');if(b)b.textContent='▶ Включить уровень';
+}
+
+/* ---- НАЦЕНКА И МАРЖА ---- */
+function markupHtml(){
+  return '<div class="field"><label>Себестоимость, ₽</label><input id="mkC" type="number" value="'+calc().total+'" oninput="calcMarkup()"></div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Наценка, %</label><input id="mkM" type="number" value="30" oninput="calcMarkup()"></div>'+
+  '<div class="field"><label>Скидка клиенту, %</label><input id="mkD" type="number" value="0" oninput="calcMarkup()"></div>'+
+  '</div>'+
+  '<div class="tool-out" id="mkOut"></div>';
+}
+function calcMarkup(){
+  const out=document.getElementById('mkOut');if(!out)return;
+  const c=tNum('mkC'),m=tNum('mkM'),d=tNum('mkD');
+  const final=c*(1+m/100)*(1-d/100);
+  const profit=final-c;
+  const margin=final?profit/final*100:0;
+  out.innerHTML='<div class="to-lbl">Цена клиенту</div>'+
+  '<div class="to-val">'+Math.round(final).toLocaleString('ru')+' ₽</div>'+
+  '<div class="to-sub">Себестоимость: <b>'+Math.round(c).toLocaleString('ru')+' ₽</b><br>'+
+  'Прибыль: <b>'+Math.round(profit).toLocaleString('ru')+' ₽</b><br>'+
+  'Маржа: <b>'+margin.toFixed(1)+'%</b>'+(d>0?' · скидка '+d+'%':'')+'</div>'+
+  '<button class="btn btn-ghost" style="margin-top:14px" onclick="copyVal('+Math.round(final)+')">📋 Скопировать цену</button>';
+}
+function copyVal(v){
+  navigator.clipboard.writeText(String(v)).then(()=>toast('Скопировано: '+v.toLocaleString('ru')+' ₽ ✓')).catch(()=>toast('Не удалось скопировать'));
+}
+
+/* ---- АБОНЕМЕНТ НА СЕРВИС ---- */
+function serviceHtml(){
+  return '<div class="row2">'+
+  '<div class="field"><label>Блоков на объекте</label><input id="sbN" type="number" value="1" oninput="calcService()"></div>'+
+  '<div class="field"><label>Обслуживаний в год</label><input id="sbF" type="number" value="2" oninput="calcService()"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Цена за выезд, ₽</label><input id="sbP" type="number" value="4000" oninput="calcService()"></div>'+
+  '<div class="field"><label>Скидка за абонемент, %</label><input id="sbD" type="number" value="15" oninput="calcService()"></div>'+
+  '</div>'+
+  '<div class="field"><label>Что входит в абонемент</label><div class="chips">'+
+  ['Чистка фильтров','Мойка блока','Проверка фреона','Замер давления','Чистка дренажа','Проверка электрики'].map(x=>'<div class="chip">'+x+'</div>').join('')+
+  '</div></div>'+
+  '<div class="tool-out" id="sbOut"></div>';
+}
+function calcService(){
+  const out=document.getElementById('sbOut');if(!out)return;
+  const n=Math.max(1,tNum('sbN')),f=Math.max(1,tNum('sbF')),p=tNum('sbP'),d=tNum('sbD');
+  const full=n*f*p;
+  const sub=full*(1-d/100);
+  out.innerHTML='<div class="to-lbl">Абонемент на год</div>'+
+  '<div class="to-val">'+Math.round(sub).toLocaleString('ru')+' ₽</div>'+
+  '<div class="to-sub">Без скидки: <b>'+Math.round(full).toLocaleString('ru')+' ₽</b><br>'+
+  'Экономия клиента: <b>'+Math.round(full-sub).toLocaleString('ru')+' ₽</b><br>'+
+  'Выездов за год: <b>'+(n*f)+'</b> · за выезд <b>'+Math.round(sub/(n*f)).toLocaleString('ru')+' ₽</b></div>'+
+  '<button class="btn btn-ghost" style="margin-top:14px" onclick="copyVal('+Math.round(sub)+')">📋 Скопировать сумму</button>';
+}
+
+/* ---- ОКУПАЕМОСТЬ ---- */
+function paybackHtml(){
+  return '<div class="row2">'+
+  '<div class="field"><label>Цена кондиционера, ₽</label><input id="pbC" type="number" value="'+calc().total+'" oninput="calcPayback()"></div>'+
+  '<div class="field"><label>Тариф, ₽/кВт·ч</label><input id="pbT" type="number" value="6" step="0.1" oninput="calcPayback()"></div>'+
+  '</div>'+
+  '<div class="row2">'+
+  '<div class="field"><label>Часов в день</label><input id="pbH" type="number" value="8" oninput="calcPayback()"></div>'+
+  '<div class="field"><label>Дней в сезон</label><input id="pbD" type="number" value="120" oninput="calcPayback()"></div>'+
+  '</div>'+
+  '<div class="field"><label>Чем охлаждали раньше</label><div class="seg" id="pbA">'+
+  '<button class="on" data-v="2" onclick="segPick(\'pbA\',this);calcPayback()">Обогреватель</button>'+
+  '<button data-v="1.5" onclick="segPick(\'pbA\',this);calcPayback()">Тепловентилятор</button>'+
+  '<button data-v="1" onclick="segPick(\'pbA\',this)">Вентилятор</button>'+
+  '</div></div>'+
+  '<div class="tool-out" id="pbOut"></div>';
+}
+function calcPayback(){
+  const out=document.getElementById('pbOut');if(!out)return;
+  const c=tNum('pbC'),t=tNum('pbT'),h=tNum('pbH'),d=tNum('pbD');
+  const el=document.querySelector('#pbA button.on');
+  const a=parseFloat(el?el.dataset.v:2);
+  const acKwh=1*h*d, altKwh=a*h*d;
+  const save=(altKwh-acKwh)*t;
+  const years=save>0?c/save:0;
+  out.innerHTML='<div class="to-lbl">Экономия за сезон</div>'+
+  '<div class="to-val">'+Math.round(save).toLocaleString('ru')+' ₽</div>'+
+  '<div class="to-sub">Кондиционер: <b>'+acKwh.toFixed(0)+' кВт·ч</b> · альтернатива: <b>'+altKwh.toFixed(0)+' кВт·ч</b><br>'+
+  'Окупаемость: <b>'+(years>0?years.toFixed(1)+' сезонов':'—')+'</b><br>'+
+  'За 3 сезона экономия: <b>'+Math.round(save*3).toLocaleString('ru')+' ₽</b></div>';
+}
+
+/* ---- ТАЙМЕР МОНТАЖА ---- */
+let tmrInt=null,tmrStart=0,tmrElapsed=0;
+function fmtT(ms){
+  const s=Math.floor(ms/1000);
+  const hh=String(Math.floor(s/3600)).padStart(2,'0');
+  const mm=String(Math.floor(s%3600/60)).padStart(2,'0');
+  const ss=String(s%60).padStart(2,'0');
+  return hh+':'+mm+':'+ss;
+}
+function timerHtml(){
+  return '<div class="tmr" id="tmrDisp">'+fmtT(tmrElapsed+(tmrInt?Date.now()-tmrStart:0))+'</div>'+
+  '<div class="btn-row">'+
+  '<button class="btn btn-gold" id="tmrBtn" onclick="toggleTimer()">'+(tmrInt?'⏸ Пауза':'▶ Старт')+'</button>'+
+  '<button class="btn btn-ghost" onclick="resetTimer()">♻️ Сброс</button></div>'+
+  '<div class="tool-out"><div class="to-lbl">Статус</div><div class="to-sub" id="tmrOut">'+(tmrInt?'Идёт отсчёт…':'Таймер остановлен')+'</div></div>';
+}
+function tickTimer(){
+  const d=document.getElementById('tmrDisp');
+  if(d)d.textContent=fmtT(tmrElapsed+(tmrInt?Date.now()-tmrStart:0));
+}
+function toggleTimer(){
+  if(tmrInt){tmrElapsed+=Date.now()-tmrStart;clearInterval(tmrInt);tmrInt=null;}
+  else{tmrStart=Date.now();tmrInt=setInterval(tickTimer,500);}
+  const b=document.getElementById('tmrBtn');if(b)b.textContent=tmrInt?'⏸ Пауза':'▶ Старт';
+  const o=document.getElementById('tmrOut');if(o)o.textContent=tmrInt?'Идёт отсчёт…':'Таймер остановлен';
+  vib();
+}
+function resetTimer(){
+  if(tmrInt){clearInterval(tmrInt);tmrInt=null;}
+  tmrElapsed=0;
+  const d=document.getElementById('tmrDisp');if(d)d.textContent='00:00:00';
+  const b=document.getElementById('tmrBtn');if(b)b.textContent='▶ Старт';
+  const o=document.getElementById('tmrOut');if(o)o.textContent='Таймер остановлен';
+  toast('Таймер сброшен');
+}
+
+/* ---- ЗАМЕТКИ МАСТЕРА ---- */
+function loadNotes(){try{return localStorage.getItem('climatpro_notes')||'';}catch(e){return '';}}
+function saveNotes(){
+  const t=document.getElementById('ntT');if(!t)return;
+  try{localStorage.setItem('climatpro_notes',t.value);}catch(e){}
+}
+function notesHtml(){
+  return '<div class="field"><label>Заметка по объекту</label>'+
+  '<textarea id="ntT" style="min-height:190px" placeholder="Особенности стен, пожелания клиента, что докупить…" oninput="saveNotes()">'+esc(loadNotes())+'</textarea></div>'+
+  '<div class="btn-row">'+
+  '<button class="btn btn-ghost" onclick="copyNotes()">📋 Копировать</button>'+
+  '<button class="btn btn-ghost" onclick="clearNotes()">🗑 Очистить</button></div>'+
+  '<div class="hint">Заметка сохраняется автоматически в памяти телефона.</div>';
+}
+function copyNotes(){
+  const t=loadNotes();
+  if(!t){toast('Заметка пустая');return;}
+  navigator.clipboard.writeText(t).then(()=>toast('Заметка скопирована ✓')).catch(()=>toast('Не удалось скопировать'));
+}
+function clearNotes(){
+  try{localStorage.removeItem('climatpro_notes');}catch(e){}
+  const t=document.getElementById('ntT');if(t)t.value='';
+  toast('Заметка очищена');
+}
+
+/* ---- ФОТО ОБЪЕКТА ---- */
+let photos=[];
+function loadPhotos(){try{const s=localStorage.getItem('climatpro_photos');if(s)photos=JSON.parse(s);}catch(e){photos=[];}}
+function savePhotos(){try{localStorage.setItem('climatpro_photos',JSON.stringify(photos));}catch(e){toast('Память заполнена — удали старые фото');}}
+function photosHtml(){
+  return '<input type="file" id="phFile" accept="image/*" capture="environment" style="display:none" onchange="addPhoto(event)">'+
+  '<button class="btn btn-gold" onclick="document.getElementById(\'phFile\').click()">📷 Сделать снимок</button>'+
+  '<div class="tool-desc" style="margin-top:12px">Снимки «до» и «после» — для отчёта и защиты от претензий. Хранятся в телефоне.</div>'+
+  '<div class="ph-grid" id="phGrid"></div>';
+}
+function renderPhotos(){
+  const g=document.getElementById('phGrid');if(!g)return;
+  if(!photos.length){g.innerHTML='';return;}
+  g.innerHTML=photos.map((p,i)=>'<div class="ph-item"><img src="'+p+'" alt="фото"><button class="ph-del" onclick="delPhoto('+i+')">✕</button></div>').join('');
+}
+function addPhoto(e){
+  const f=e.target.files&&e.target.files[0];if(!f)return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    const img=new Image();
+    img.onload=()=>{
+      const max=900;
+      let w=img.width,h=img.height;
+      if(w>h&&w>max){h=h*max/w;w=max;}else if(h>max){w=w*max/h;h=max;}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      photos.unshift(cv.toDataURL('image/jpeg',0.7));
+      savePhotos();renderPhotos();vib(20);toast('Снимок добавлен ✓');
+    };
+    img.src=rd.result;
+  };
+  rd.readAsDataURL(f);
+  e.target.value='';
+}
+function delPhoto(i){photos.splice(i,1);savePhotos();renderPhotos();toast('Удалено');}
+
 const TOOLS={
   tpl:{t:'Шаблоны смет',d:'Готовые наборы работ — один тап и смета заполнена.',html:tplHtml},
   price:{t:'Прайс-лист',d:'Поставь свои цены. Они сохранятся и будут применяться во всех расчётах.',html:priceHtml},
