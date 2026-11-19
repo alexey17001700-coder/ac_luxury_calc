@@ -2179,7 +2179,7 @@ function paybackHtml(){
   '<div class="field"><label>Чем охлаждали раньше</label><div class="seg" id="pbA">'+
   '<button class="on" data-v="2" onclick="segPick(\'pbA\',this);calcPayback()">Обогреватель</button>'+
   '<button data-v="1.5" onclick="segPick(\'pbA\',this);calcPayback()">Тепловентилятор</button>'+
-  '<button data-v="1" onclick="segPick(\'pbA\',this)">Вентилятор</button>'+
+  '<button data-v="1" onclick="segPick(\'pbA\',this);calcPayback()">Вентилятор</button>'+
   '</div></div>'+
   '<div class="tool-out" id="pbOut"></div>';
 }
